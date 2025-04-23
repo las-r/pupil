@@ -1,0 +1,26 @@
+~~ check if strings have the letter e in them
+
+~~ check function  
+func check(string)  
+    ~~ loop through string and check if the index is e or E  
+    index = 0  
+    while index < string.len  
+        if string[index] == "e" || string[index] == "E"  
+            ret true  
+        end  
+        index = index + 1  
+    end
+
+    ~~ no e  
+    ret false  
+end
+
+~~ user inputs string  
+inp str string "Enter anything: "
+
+~~ output  
+if check(string)  
+    out "THE STRING HAS AN E OH MY GOD"  
+else  
+    out "THE STRING DOESN’T HAVE AN E OH MY GOD"  
+end
