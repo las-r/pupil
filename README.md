@@ -1,6 +1,6 @@
 # Pupil
 
-Pupil *(.pil)* is an interpreted programming language made for making stuff and other stuff. It has a focus on graphics using SDL.
+Pupil (*.pil*) is an interpreted programming language made for making stuff and other stuff. It has a focus on graphics using SDL.
 
 Things that are underlined are unfinished.
 
@@ -125,88 +125,94 @@ Finishes the program
 
 ### Simple Calculator
 
-`~~ simple calculator`
+```pil
+~~ simple calculator
 
-`~~ user inputs numbers`  
-`inp flt x "Enter your first number (x): "`  
-`inp flt y "Enter your second number (y): "`
+~~ user inputs numbers  
+inp flt x "Enter your first number (x): "  
+inp flt y "Enter your second number (y): "
 
-`~~ calculate and output answers`  
-`out "x + y = " + (x + y)`  
-`out "x - y = " + (x - y)`  
-`out "x * y = " + (x * y)`  
-`out "x / y = " + (x / y)`  
-`out "x ^ y = " + (x ^ y)`  
-`out "sqrt x = " + msqrt(x)`  
-`out "sqrt y = " + msqrt(y)`
+~~ calculate and output answers  
+out "x + y = " + (x + y)  
+out "x - y = " + (x - y)  
+out "x * y = " + (x * y)  
+out "x / y = " + (x / y)  
+out "x ^ y = " + (x ^ y)  
+out "sqrt x = " + msqrt(x)  
+out "sqrt y = " + msqrt(y)
+```
 
 ### To-Do List Maker
 
-`~~ to-do list creator`
+```pil
+~~ to-do list creator
 
-`~~ list`  
-`arr tdlist = []`
+~~ list  
+arr tdlist = []
 
-`~~ main loop`  
-`while true`  
-	`out "Actions"`  
-	`out "0: View"`  
-`out "1: Add item"`  
-`out "2: Remove item"`  
-	`inp int choice "Enter your choice from those above: "`
+~~ main loop  
+while true  
+    out "Actions"  
+    out "0: View"  
+    out "1: Add item"  
+    out "2: Remove item"  
+    inp int choice "Enter your choice from those above: "
 
-	`if choice == 0`  
-		`~~ loop through list alphabetically`  
-		`index = 0`  
-		`while index < tdlist.len`  
-			`out "- " + sort(tdlist)[index]`  
-			`index = index + 1`  
-		`end`
+    if choice == 0  
+        ~~ loop through list alphabetically  
+        index = 0  
+        while index < tdlist.len  
+            out "- " + sort(tdlist)[index]  
+            index = index + 1  
+        end
 
-	`elseif choice == 1`  
-		`~~ item to add to list`  
-		`inp str item "Enter what you would like to add: "`
+    elseif choice == 1  
+        ~~ item to add to list  
+        inp str item "Enter what you would like to add: "
 
-		`~~ append item to list`  
-		`tdlist.add(item)`
+        ~~ append item to list  
+        tdlist.add(item)
 
-	`elseif choice == 2`  
-		`~~ item to remove from list`  
-		`inp str item "Enter what you would like to remove: "`  
-		  
-		`if tdlist.has(item)`  
-			`tdlist.rem(item)`  
-		`else:`  
-			`out "This isn’t in the list."`  
-		`end`  
-	`end`  
-`end`
+    elseif choice == 2  
+        ~~ item to remove from list  
+        inp str item "Enter what you would like to remove: "  
+        
+        if tdlist.has(item)  
+            tdlist.rem(item)  
+        else:  
+            out "This isn’t in the list."  
+        end  
+    end 
+end
+```
 
 ### String E Checker
 
-`~~ check if strings have the letter e in them`
+```pil
+~~ check if strings have the letter e in them
 
-`~~ check function`  
-`func check(string)`  
-	`~~ loop through string and check if the index is e or E`  
-	`index = 0`  
-	`while index < string.len`  
-		`if string[index] == "e" || string[index] == "E"`  
-			`ret true`  
-		`end`  
-`index = index + 1`  
-	`end`
+~~ check function  
+func check(string)  
+    ~~ loop through string and check if the index is e or E  
+    index = 0  
+    while index < string.len  
+        if string[index] == "e" || string[index] == "E"  
+            ret true  
+        end  
+        index = index + 1  
+    end
 
-	`~~ no e`  
-	`ret false`  
-`end`
+    ~~ no e  
+    ret false  
+end
 
-`~~ user inputs string`  
-`inp str string "Enter anything: "`
+~~ user inputs string  
+inp str string "Enter anything: "
 
-`~~ output`  
-`if check(string)`  
-	`out "THE STRING HAS AN E OH MY GOD"`  
-`else`  
-	`out "THE STRING DOESN’T HAVE AN E OH MY GOD"`  
-`end`
+~~ output  
+if check(string)  
+    out "THE STRING HAS AN E OH MY GOD"  
+else  
+    out "THE STRING DOESN’T HAVE AN E OH MY GOD"  
+end
+```
