@@ -20,6 +20,7 @@ Things that are underlined are unfinished.
 `false`: False
 #### Comparison
 `{val} == {val}`: Equal to  
+`{val} != {val}`: Not equal to  
 `{val} > {val}`: Greater than  
 `{val} >= {val}`: Greater than or equal to  
 `{val} < {val}`: Less than  
