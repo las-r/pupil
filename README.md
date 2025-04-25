@@ -34,70 +34,97 @@ Things that are underlined are unfinished.
 `arr`: Array, `[int 1, int 2, str "three", flt 4.5, bln true]`
 
 ### Comments
-Explain code  
-`~~ this is a comment or something idk`
+Explain code
+```
+~~ this is a comment or something idk
+```
 
 ### Variables
-Store data  
-`str greeting = "Hello, world!"`
+Store data
+```
+str greeting = "Hello, world!"
+```
 
 ### If
-If condition do action  
-`if value == 69`  
-	`out "hehehe"`  
-`elseif otherValue == value`  
-	`out "whoa they're equal"`  
-`else`  
-	`out "sad"`  
-`end`
+If condition do action
+```
+if value == 69  
+    out "hehehe"  
+elseif otherValue == value  
+    out "whoa they're equal"  
+else  
+    out "sad"  
+end
+```
 
 ### Jump (Relative)
 Jump amount of lines  
-`jump 7`
+```
+jump 7
+```
 
 ### Jump (Absolute)
-Jump to line  
-`jumpto 3`
+Jump to line
+```
+jumpto 3
+```
 
 ### While
 While condition do action  
-`while running == true`  
-	`out "im running"`  
-`end`
+```
+while running == true
+    out "im running"
+end
+```
 
 ### Output
 Prints in console  
-`out "Hi!"`
+```
+out "Hi!"
+```
 
 ### Input
-User input in console  
-`inp int number "enter a number"`
+User input in console
+```
+inp int number "enter a number"
+```
 
 ### Function
 Stores code and context  
-`func add(x, y)`  
-	`ret x + y`  
-`end`  
-`add(1, 2) ~~ returns 3`
+```
+func add(x, y)
+    ret x + y
+end
+add(1, 2)  ~~ returns 3
+```
+
 
 ### Import
-Get functions from another file  
-`get more-math.pil`
+Get functions from another file
+```
+get more-math.pil
+```
 
 ### Wait
 Pause execution  
-`wait 500 ~~ waits 0.5 secs`
+```
+wait 500 ~~ waits 0.5 secs
+```
 
 ### Skip
 Does nothing  
-`skip`
+```
+skip
+```
 
 ### Stop
 Finishes the program  
-`stop`
+```
+stop
+```
 
 ### In-built functions
-- **Mathematical**: msqrt(x), mfloor(x), mceil(x), mfact(x), msin(x), mcos(x), mtan(x), masin(x), macos(x), matan(x), mcot(x), msec(x), mcsc(x)  
-- **Random**: rint(min, max), rpick(array)  
-- **Time**: unix()  
-- **Array**: sort(array)
+- **Mathematical**: `msqrt(x)`, `mfloor(x)`, `mceil(x)`, `mfact(x)`, `msin(x)`, `mcos(x)`, `mtan(x)`, `masin(x)`, `macos(x)`, `matan(x)`, `mcot(x)`, `msec(x)`, `mcsc(x)`  
+- **Random**: `rint(min, max)`, `rpick(array)`  
+- **Time**: `unix()`  
+- **Array**: `sort(array)`
