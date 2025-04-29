@@ -45,7 +45,7 @@ Explain code
 ### Variables
 Store data
 ```
-str greeting = "Hello, world!"
+var greeting = "Hello, world!"
 ```
 
 ### If
