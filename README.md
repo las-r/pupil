@@ -89,7 +89,7 @@ out "Hi!"
 ### Input
 User input in console
 ```
-inp int number "enter a number"
+inp number "enter a number"
 ```
 
 ### Function
