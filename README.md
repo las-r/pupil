@@ -10,7 +10,7 @@ Things that are underlined are unfinished.
 `{val} - {val}`: Subtract  
 `{val} * {val}`: Multiply  
 `{val} / {val}`: Divide  
-`{val} ^ {val}`: Exponent
+`{val} ^ {val}`: Exponentiate
 #### Boolean
 `{val} && {val}`: AND  
 `{val} || {val}`: OR  
