@@ -11,6 +11,7 @@ Things that are underlined are unfinished.
 `{val} * {val}`: Multiply  
 `{val} / {val}`: Divide  
 `{val} ^ {val}`: Exponentiate
+
 #### Boolean
 `{val} && {val}`: AND  
 `{val} || {val}`: OR  
@@ -18,6 +19,8 @@ Things that are underlined are unfinished.
 `! {val}`: NOT  
 `true`: True  
 `false`: False
+`null`: Null
+
 #### Comparison
 `{val} == {val}`: Equal to  
 `{val} != {val}`: Not equal to  
