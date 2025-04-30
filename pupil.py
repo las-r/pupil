@@ -71,7 +71,6 @@ with open(filename, "r") as file:
         # comment and skip
         if line.startswith("~~") or line.strip() == "skip":
             pass
-            
             if debug:
                 print(f"Skipped line ({filename}, {lineNum})")
 
@@ -86,14 +85,12 @@ with open(filename, "r") as file:
         elif line.strip() == "stop":
             if debug:
                 print(f"Stopping program ({filename}, {lineNum})")
-
             sys.exit(0)
 
         # wait
         elif line.startswith("wait "):
             ms = line[5:]
             time.sleep(evaluate(ms) / 1000)
-
             if debug:
                 print(f"Waited for {ms.strip()} ms ({filename}, {lineNum})")
 
@@ -101,7 +98,6 @@ with open(filename, "r") as file:
         elif line.startswith("var "):
             name, val = line[4:].split("=", 1)
             variables[name.strip()] = evaluate(val)
-
             if debug:
                 print(f"Set variable {name.strip()} to {val.strip()} ({filename}, {lineNum})")
 
@@ -116,7 +112,6 @@ with open(filename, "r") as file:
             if debug:
                 print(f"Jumping {ln.strip()} lines ({filename}, {lineNum})")
             lineNum += evaluate(ln)
-
             continue
 
         # jumpto
@@ -125,12 +120,12 @@ with open(filename, "r") as file:
             if debug:
                 print(f"Jumping to line {ln.strip()} ({filename}, {lineNum})")
             lineNum = evaluate(ln)
-
             continue
 
         # unknown
         else:
             print(f"Unable to parse '{line}' ({filename}, {lineNum})")
+            sys.exit(0)
 
         # increment line
         lineNum += 1
