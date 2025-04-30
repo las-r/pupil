@@ -95,10 +95,10 @@ inp number "enter a number"
 ### Function
 Stores code and context  
 ```
-func add(x, y)
+func add (x y)
     ret x + y
 end
-add(1, 2)  ~~ returns 3
+add (1 2)  ~~ returns 3
 ```
 
 
