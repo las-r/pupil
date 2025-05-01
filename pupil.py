@@ -7,6 +7,7 @@ import time
 
 # environment
 variables = {}
+functions = {}
 debug = False
 lineNum = 1
 
@@ -27,11 +28,11 @@ def evaluate(x):
     # type
     if x.startswith('"') and x.endswith('"'):
         return x[1:-1]
-    if x.lower() == 'true':
+    if x == 'true':
         return True
-    if x.lower() == 'false':
+    if x == 'false':
         return False
-    if x.lower() == 'null':
+    if x == 'null':
         return None
     try:
         return int(x)
@@ -41,6 +42,10 @@ def evaluate(x):
         return float(x)
     except ValueError:
         pass
+    
+    # inbuilt functions
+    if x == "tunix":
+        return time.time()
 
     # variable
     if x in variables:
@@ -48,6 +53,39 @@ def evaluate(x):
     else:
         print(f"Unable to evaluate {x} ({filename}, {lineNum})")
         sys.exit(0)
+
+# parse as type func
+def typeParse(x, typ):
+    if debug:
+        print(f"Parsing {x} as {typ} ({filename}, {lineNum})")
+    
+    try:
+        # type
+        if typ == "int":
+            return int(x)
+        elif typ == "flt":
+            return float(x)
+        elif typ == "str":
+            return x
+        elif typ == "bln":
+            return bool(x)
+        else:
+            print(f"Unknown type '{typ}' ({filename}, {lineNum})")
+            sys.exit(0)
+    
+    except ValueError:
+        print(f"Unable to parse '{x}' as '{typ}' ({filename}, {lineNum})")
+        sys.exit(0)
+        
+# check variable interference func
+def varInter(x):
+    invalid_chars = "1234567890`~!@#$%^&*(){}[]-+/\\.<>,;:'=\""
+    reserved = "int,flt,bln,str,tunix,msqrt,mfloor,mceil,mfact,msin,mcos,mtan,masin,macos,matan,mcot,msec,mcsc,rint,rpick,sort,var,if,elseif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop".split(",")
+    
+    if any(c in x for c in invalid_chars) or x in reserved:
+        print(f"Bad variable name '{x}' ({filename}, {lineNum})")
+    else:
+        return x
 
 # arguments
 if len(sys.argv) == 2:
@@ -97,7 +135,7 @@ with open(filename, "r") as file:
         # variable
         elif line.startswith("var "):
             name, val = line[4:].split("=", 1)
-            variables[name.strip()] = evaluate(val)
+            variables[varInter(name).strip()] = evaluate(val)
             if debug:
                 print(f"Set variable {name.strip()} to {val.strip()} ({filename}, {lineNum})")
 
@@ -105,6 +143,15 @@ with open(filename, "r") as file:
         elif line.startswith("out "):
             output = line[4:]
             print(evaluate(output))
+            
+        # input
+        elif line.startswith("inp "):
+            var, typ, ph = line[4:].split(" ", 2)
+            if debug:
+                print(f"Inputting {typ.strip()} {var.strip()} ({filename}, {lineNum})")
+            variables[varInter(var)] = typeParse(input(evaluate(ph)), typ)
+            if debug:
+                print(f"Inputed {variables[var]} ({filename}, {lineNum})")
 
         # jump
         elif line.startswith("jump "):
