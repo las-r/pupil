@@ -19,7 +19,8 @@ def clearCmd():
     elif s in ("Linux", "Darwin"):
         os.system('clear')
     else:
-        print("Operating system not supported.")
+        print(f"Operating system not supported for clear ({filename}, {lineNum})")
+        sys.exit(0)
 
 # evaluate func
 def evaluate(x):
@@ -106,9 +107,22 @@ with open(filename, "r") as file:
         # line
         line = lines[lineNum - 1]
 
+        # check for inline comments
+        ign = False
+        il = 0
+        for l in line:
+            if l == '"':
+                ign = not ign
+            if not ign:
+                if l == "~" and line[il + 1] == "~":
+                    line = line[:il]
+                    if debug:
+                        print(f"Inline comment found, ignoring ({filename}, {lineNum})")
+                    break
+            il += 1   
+
         # comment and skip
         if line.startswith("~~") or line.strip() == "skip":
-            pass
             if debug:
                 print(f"Skipped line ({filename}, {lineNum})")
 
