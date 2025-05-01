@@ -6,17 +6,14 @@ Things that are underlined are unfinished.
 ## Syntax
 ### Operators
 #### Arithmetic & String
-`{val} + {val}`: Add
+`{val} + {val}`: Add\
 `{val} - {val}`: Subtract  
 `{val} * {val}`: Multiply  
 `{val} / {val}`: Divide  
-`{val} ^ {val}`: Exponentiate
+`{val} ^ {val}`: Exponentiate\
 `{val} : {val}`: Concatenate
 
 #### Boolean
-`{val} && {val}`: AND  
-`{val} || {val}`: OR  
-`{val} :: {val}`: XOR  
 `! {val}`: NOT  
 `true`: True  
 `false`: False\
@@ -29,6 +26,9 @@ Things that are underlined are unfinished.
 `{val} >= {val}`: Greater than or equal to  
 `{val} < {val}`: Less than  
 `{val} <= {val}`: Less than or equal to
+`{val} && {val}`: AND
+`{val} || {val}`: OR
+`{val} :: {val}`: XOR
 
 ### Data types
 `int`: Integer, `10`  
