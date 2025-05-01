@@ -5,12 +5,13 @@ Things that are underlined are unfinished.
 
 ## Syntax
 ### Operators
-#### Arithmetic 
-`{val} + {val}`: Add, Concatenate  
+#### Arithmetic & String
+`{val} + {val}`: Add
 `{val} - {val}`: Subtract  
 `{val} * {val}`: Multiply  
 `{val} / {val}`: Divide  
 `{val} ^ {val}`: Exponentiate
+`{val} : {val}`: Concatenate
 
 #### Boolean
 `{val} && {val}`: AND  
