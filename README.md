@@ -20,22 +20,22 @@ Things that are underlined are unfinished.
 `null`: Null
 
 #### Comparison
-`{val} == {val}`: Equal to  
-`{val} != {val}`: Not equal to  
-`{val} > {val}`: Greater than  
-`{val} >= {val}`: Greater than or equal to  
-`{val} < {val}`: Less than  
-`{val} <= {val}`: Less than or equal to
-`{val} && {val}`: AND
-`{val} || {val}`: OR
+`{val} == {val}`: Equal to\
+`{val} != {val}`: Not equal to\
+`{val} > {val}`: Greater than\
+`{val} >= {val}`: Greater than or equal to\
+`{val} < {val}`: Less than\
+`{val} <= {val}`: Less than or equal io\
+`{val} && {val}`: AND  
+`{val} || {val}`: OR\
 `{val} :: {val}`: XOR
 
 ### Data types
-`int`: Integer, `10`  
-`flt`: Floating point decimal, `3.141`  
-`str`: String, `"string"`  
-`bln`: Boolean, `true`  
-`arr`: Array, `[int 1, int 2, str "three", flt 4.5, bln true]`
+`int`: Integer, `10`\
+`flt`: Floating point decimal, `3.141`\
+`str`: String, `"string"`\
+`bln`: Boolean, `true`\
+`arr`: Array, `[1, 2, "three", 4.5, true]`
 
 ### Comments
 Explain code
