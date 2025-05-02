@@ -128,7 +128,6 @@ stop
 ```
 
 ### In-built functions
-- **Mathematical**: `msqrt(x)`, `mfloor(x)`, `mceil(x)`, `msin(x)`, `mcos(x)`, `mtan(x)`
-- **Random**: `rint(min, max)`
-- **Time**: `tunix`  
-- **Array**: `sort(array)`
+- **Mathematical**: `.msqrt (x)`, `.mfloor (x)`, `.mceil (x)`, `.msin (x)`, `.mcos (x)`, `.mtan (x)`, `.mround (x)`
+- **Random**: `.rint (min, max)`
+- **Time**: `.tunix ()`
