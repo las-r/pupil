@@ -5,11 +5,40 @@ import random
 import sys
 import time
 
+# inbuilt funcs
+def msqrt(x):
+    return math.sqrt(x)
+def mfloor(x):
+    return int(x)
+def mceil(x):
+    return math.ceil(x)
+def msin(x):
+    return math.sin(x)
+def mcos(x):
+    return math.cos(x)
+def mtan(x):
+    return math.tan(x)
+def mround(x, d):
+    return round(x, d)
+def rint(min_, max_):
+    return random.randint(min_, max_)
+def tunix():
+    return time.time()
+
 # environment
-variables = {}
-functions = {}
 debug = False
 lineNum = 1
+variables = {}
+functions = {}
+ifunctions = {"msqrt": msqrt, 
+              "mfloor": mfloor, 
+              "mceil": mceil, 
+              "msin": msin, 
+              "mcos": mcos, 
+              "mtan": mtan, 
+              "rint": rint, 
+              "mround": mround,
+              "tunix": tunix}
 
 # clear console func
 def clearCmd():
@@ -27,13 +56,13 @@ def evaluate(x):
     x = x.strip()
 
     # type
-    if x.startswith('"') and x.endswith('"'):
+    if (x.startswith('"') and x.endswith('"')) or (x.startswith("'") and x.endswith("'")):
         return x[1:-1]
-    if x == 'true':
+    if x == "true":
         return True
-    if x == 'false':
+    if x == "false":
         return False
-    if x == 'null':
+    if x == "null":
         return None
     try:
         return int(x)
@@ -43,10 +72,29 @@ def evaluate(x):
         return float(x)
     except ValueError:
         pass
+
+    # operators
+    # will implement later
     
-    # inbuilt functions
-    if x == "tunix":
-        return time.time()
+    # function calls
+    if x.startswith("."):
+        x, arg = x.split(" ", 1)
+        if debug:
+            print(f"Running function '{x[1:]}' ({filename}, {lineNum})")
+
+        # parse arguments
+        args = arg[1:-1].split(" ")
+        for i, a in enumerate(args):
+            args[i] = evaluate(a)
+
+        # run function
+        if x[1:] in ifunctions:
+            return ifunctions[x[1:]](*args)
+        if x[1:] in functions:
+            pass # implement this later
+        else:
+            print(f"Function '{x[1:]}' not found ({filename}, {lineNum})")
+            sys.exit(0)
 
     # variable
     if x in variables:
@@ -81,7 +129,7 @@ def typeParse(x, typ):
 # check variable interference func
 def varInter(x):
     invalid_chars = "1234567890`~!@#$%^&*(){}[]-+/\\.<>,;:'=\""
-    reserved = "int,flt,bln,str,tunix,msqrt,mfloor,mceil,mfact,msin,mcos,mtan,masin,macos,matan,mcot,msec,mcsc,rint,rpick,sort,var,if,elseif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop".split(",")
+    reserved = "int,flt,bln,str,tunix,msqrt,mfloor,mceil,mfact,msin,mcos,mtan,masin,rint,rpick,sort,var,if,elseif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop".split(",")
     
     if any(c in x for c in invalid_chars) or x in reserved:
         print(f"Bad variable name '{x}' ({filename}, {lineNum})")
@@ -121,8 +169,8 @@ with open(filename, "r") as file:
                     break
             il += 1   
 
-        # comment and skip
-        if line.startswith("~~") or line.strip() == "skip":
+        # comment, skip, and empty
+        if line.startswith("~~") or line.strip() in ["skip", ""]:
             if debug:
                 print(f"Skipped line ({filename}, {lineNum})")
 
@@ -144,14 +192,14 @@ with open(filename, "r") as file:
             ms = line[5:]
             time.sleep(evaluate(ms) / 1000)
             if debug:
-                print(f"Waited for {ms.strip()} ms ({filename}, {lineNum})")
+                print(f"Waited for '{ms.strip()}' ms ({filename}, {lineNum})")
 
         # variable
         elif line.startswith("var "):
             name, val = line[4:].split("=", 1)
             variables[varInter(name).strip()] = evaluate(val)
             if debug:
-                print(f"Set variable {name.strip()} to {val.strip()} ({filename}, {lineNum})")
+                print(f"Set variable '{name.strip()}' to '{val.strip()}' ({filename}, {lineNum})")
 
         # output
         elif line.startswith("out "):
@@ -182,6 +230,26 @@ with open(filename, "r") as file:
                 print(f"Jumping to line {ln.strip()} ({filename}, {lineNum})")
             lineNum = evaluate(ln)
             continue
+
+        # function call
+        elif line.startswith("."):
+            func, arg = line.split(" ", 1)
+            if debug:
+                print(f"Running function '{func[1:]}' ({filename}, {lineNum})")
+            
+            # parse arguments
+            args = arg[1:-1].split(" ")
+            for i, a in enumerate(args):
+                args[i] = evaluate(a)
+
+            # run function
+            if func[1:] in ifunctions:
+                ifunctions[func[1:]](*args)
+            if func[1:] in functions:
+                pass # implement this later
+            else:
+                print(f"Function '{func[1:]}' not found ({filename}, {lineNum})")
+                sys.exit(0)
 
         # unknown
         else:
