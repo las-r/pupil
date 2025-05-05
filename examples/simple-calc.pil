@@ -1,14 +1,14 @@
 ~~ simple calculator
 
 ~~ user inputs numbers  
-inp flt x "Enter your first number (x): "  
-inp flt y "Enter your second number (y): "
+inp x flt "Enter your first number (x): "  
+inp y flt "Enter your second number (y): "
 
 ~~ calculate and output answers  
-out "x + y = " + (x + y)  
-out "x - y = " + (x - y)  
-out "x * y = " + (x * y)  
-out "x / y = " + (x / y)  
-out "x ^ y = " + (x ^ y)  
-out "sqrt x = " + msqrt(x)  
-out "sqrt y = " + msqrt(y)
+out x + y
+out x - y 
+out x * y
+out x / y  
+out x ^ y
+out .msqrt (x)
+out .msqrt (y)
