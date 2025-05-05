@@ -105,4 +105,4 @@ stop
 ### In-built functions
 - **Mathematical**: `.msqrt (x)`, `.mfloor (x)`, `.mceil (x)`, `.msin (x)`, `.mcos (x)`, `.mtan (x)`, `.mround (x, d)`
 - **Random**: `.rint (min, max)`
-- **Time**: `.tunix ()`
+- **Time**: `.tunix`
