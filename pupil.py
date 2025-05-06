@@ -54,6 +54,42 @@ def clearCmd():
         print(f"Operating system not supported for clear ({filename}, {lineNum})")
         sys.exit(0)
 
+# tokenize func
+def tokenize(x):
+    x = x.strip()
+
+    # tokenized output
+    tokenized = []
+
+    # empty
+    if x == "":
+        return
+    
+    # split into tokens
+    igns = False
+    tokenInds = []
+    s = ""
+    for ind, c in enumerate(x):
+        # ignore strings
+        if c == '"':
+            igns = not igns
+        
+        # add characters
+        if not igns:
+            if c == " ":
+                tokenInds.append(ind)
+        else:
+            pass
+
+    # add to tokens
+    for ind, t in enumerate(tokenInds):
+        try:
+            tokenized.append(x[t:tokenInds[ind + 1]])
+        except IndexError:
+            pass
+
+    return tokenized
+
 # evaluate func
 def evaluate(x):
     x = x.strip()
@@ -63,7 +99,7 @@ def evaluate(x):
         return
 
     # type
-    if (x.startswith('"') and x.endswith('"')) or (x.startswith("'") and x.endswith("'")):
+    if (x.startswith('"') and x.endswith('"')):
         return x[1:-1]
     if x == "true":
         return True
