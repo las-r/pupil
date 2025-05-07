@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.2.0
+# version 0.2.1
 
 # inbuilt funcs
 def msqrt(x):
@@ -64,7 +64,7 @@ def clearCmd():
         os.system('clear')
     else:
         print(f"Operating system not supported for clear ({filename}, {lineNum})")
-        sys.exit(0)
+        sys.exit(1)
 
 # tokenize func
 def tokenize(x):
@@ -105,6 +105,8 @@ def tokenize(x):
 # evaluate func
 def evaluate(x):
     x = x.strip()
+    if debug:
+        print(f"Evaluating value `{x}` ({filename}, {lineNum})")
 
     # empty
     if x == "":
@@ -194,7 +196,7 @@ def evaluate(x):
     if x.startswith("."):
         fc = x.split("(")
         if debug:
-            print(f"Running function '{fc[0][1:]}' ({filename}, {lineNum})")
+            print(f"Running function `{fc[0][1:]}` ({filename}, {lineNum})")
 
         # parse arguments
         if len(fc) == 2:
@@ -210,19 +212,19 @@ def evaluate(x):
                 return ifunctions[fc](*args)
             except TypeError:
                 print(f"Function `{fc}` missing one or more arguments ({filename}, {lineNum})")
-                sys.exit(0)
+                sys.exit(1)
         elif fc in functions:
             pass # implement this later
         else:
             print(f"Function `{fc[0][1:]}` not found ({filename}, {lineNum})")
-            sys.exit(0)
+            sys.exit(1)
 
     # variable
     if x in variables:
         return variables[x]
     else:
         print(f"Unable to evaluate value `{x}` ({filename}, {lineNum})")
-        sys.exit(0)
+        sys.exit(1)
 
 # parse as type func
 def typeParse(x, typ):
@@ -241,11 +243,11 @@ def typeParse(x, typ):
             return bool(x)
         else:
             print(f"Unknown type `{typ}` ({filename}, {lineNum})")
-            sys.exit(0)
+            sys.exit(1)
     
     except ValueError:
         print(f"Unable to parse value `{x}` as type `{typ}` ({filename}, {lineNum})")
-        sys.exit(0)
+        sys.exit(1)
         
 # check variable interference func
 def varInter(x):
@@ -254,8 +256,7 @@ def varInter(x):
     
     if any(c in x for c in invChars) or x in res:
         print(f"Bad variable name `{x}` ({filename}, {lineNum})")
-    else:
-        return x
+        sys.exit(1)
 
 # arguments
 if len(sys.argv) == 2:
@@ -267,7 +268,7 @@ elif len(sys.argv) == 3:
         print("DEBUG MODE")
 else:
     print("Usage: python pupil.py file.pil [--debug]")
-    sys.exit(0)
+    sys.exit(1)
 
 # run file
 try:
@@ -287,7 +288,7 @@ try:
                     if l == "~" and line[il + 1] == "~":
                         line = line[:il]
                         if debug:
-                            print(f"Inline comment found, ignoring ({filename}, {lineNum})")
+                            print(f"Ignoring inline comment ({filename}, {lineNum})")
                         break
                 il += 1   
 
@@ -319,7 +320,9 @@ try:
             # variable
             elif line.startswith("set "):
                 name, val = line[4:].split("=", 1)
-                variables[varInter(name).strip()] = evaluate(val)
+                varInter(name.strip())
+
+                variables[name.strip()] = evaluate(val)
                 if debug:
                     print(f"Set variable `{name.strip()}` to `{val.strip()}` ({filename}, {lineNum})")
 
@@ -331,9 +334,11 @@ try:
             # input
             elif line.startswith("inp "):
                 var, typ, ph = tokenize(line[4:])
+                varInter(var)
+
                 if debug:
                     print(f"Inputting `{typ.strip()}`, an `{var.strip()}` ({filename}, {lineNum})")
-                variables[varInter(var)] = typeParse(input(evaluate(ph)), typ)
+                variables[var] = typeParse(input(evaluate(ph)), typ)
                 if debug:
                     print(f"Inputed `{variables[var]}` ({filename}, {lineNum})")
 
@@ -342,6 +347,7 @@ try:
                 ln = line[5:]
                 if debug:
                     print(f"Jumping `{ln.strip()}` lines ({filename}, {lineNum})")
+                    
                 lineNum += evaluate(ln)
                 continue
 
@@ -350,6 +356,7 @@ try:
                 ln = line[7:]
                 if debug:
                     print(f"Jumping to line `{ln.strip()}` ({filename}, {lineNum})")
+
                 lineNum = evaluate(ln)
                 continue
 
@@ -369,16 +376,16 @@ try:
                     pass # implement this later
                 else:
                     print(f"Function `{func[1:]}` not found ({filename}, {lineNum})")
-                    sys.exit(0)
+                    sys.exit(1)
 
             # variable
             else:
                 print(f"Unable to parse line `{line}` ({filename}, {lineNum})")
-                sys.exit(0)
+                sys.exit(1)
 
             lineNum += 1
 
 # pil file not found
 except FileNotFoundError:
     print(f"File `{filename}` not found")
-    sys.exit(0)
+    sys.exit(1)
