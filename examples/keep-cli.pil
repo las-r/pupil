@@ -1,0 +1,7 @@
+~~ keep cli open example
+
+~~ output
+out "Hello, world! (Long edition)"
+
+~~ keep cli open
+inp _ str ""
