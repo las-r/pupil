@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.1.0
+# version 0.2.0
 
 # inbuilt funcs
 def msqrt(x):
@@ -23,10 +23,18 @@ def mtan(x):
     return math.tan(x)
 def mround(x, d):
     return round(x, d)
-def rint(min_, max_):
-    return random.randint(min_, max_)
+def rint(n, x):
+    return random.randint(n, x)
 def tunix():
     return time.time()
+def ystr(x):
+    return str(x)
+def yint(x):
+    return int(x)
+def yflt(x):
+    return float(x)
+def ybln(x):
+    return bool(x)
 
 # environment
 debug = False
@@ -41,7 +49,11 @@ ifunctions = {"msqrt": msqrt,
               "mtan": mtan, 
               "rint": rint, 
               "mround": mround,
-              "tunix": tunix}
+              "tunix": tunix,
+              "str": ystr,
+              "int": yint,
+              "flt": yflt,
+              "bln": ybln}
 
 # clear console func
 def clearCmd():
@@ -61,32 +73,32 @@ def tokenize(x):
     # tokenized output
     tokenized = []
 
-    # empty
+    # empty string check
     if x == "":
-        return
-    
-    # split into tokens
+        return tokenized
+
+    # inter over chars
     igns = False
-    tokenInds = []
-    s = ""
-    for ind, c in enumerate(x):
+    token = ""
+    for c in x:
         # ignore strings
         if c == '"':
             igns = not igns
-        
-        # add characters
+
+        # split
         if not igns:
             if c == " ":
-                tokenInds.append(ind)
+                if token:
+                    tokenized.append(token)
+                    token = ""
+            else:
+                token += c
         else:
-            pass
-
-    # add to tokens
-    for ind, t in enumerate(tokenInds):
-        try:
-            tokenized.append(x[t:tokenInds[ind + 1]])
-        except IndexError:
-            pass
+            token += c
+    
+    # last token (if any)
+    if token:
+        tokenized.append(token)
 
     return tokenized
 
@@ -97,27 +109,9 @@ def evaluate(x):
     # empty
     if x == "":
         return
-
-    # type
-    if (x.startswith('"') and x.endswith('"')):
-        return x[1:-1]
-    if x == "true":
-        return True
-    if x == "false":
-        return False
-    if x == "null":
-        return None
-    try:
-        return int(x)
-    except ValueError:
-        pass
-    try:
-        return float(x)
-    except ValueError:
-        pass
-
+    
     # operators
-    tokens = x.split(" ")
+    tokens = tokenize(x)
     if len(tokens) >= 3 and len(tokens) % 2 == 1:
         total = evaluate(tokens[0])
         i = 1
@@ -136,6 +130,8 @@ def evaluate(x):
                 total /= val
             elif op == "^":
                 total **= val
+            elif op == "%":
+                total %= val
 
             # bitwise
             elif op == "&":
@@ -175,19 +171,35 @@ def evaluate(x):
 
             i += 2
         return total
+
+    # type
+    if (x.startswith('"') and x.endswith('"')):
+        return x[1:-1]
+    if x == "true":
+        return True
+    if x == "false":
+        return False
+    if x == "null":
+        return None
+    try:
+        return int(x)
+    except ValueError:
+        pass
+    try:
+        return float(x)
+    except ValueError:
+        pass
     
     # function calls
     if x.startswith("."):
-        fc = x.split(" ", 1)
+        fc = x.split("(")
         if debug:
             print(f"Running function '{fc[0][1:]}' ({filename}, {lineNum})")
 
         # parse arguments
         if len(fc) == 2:
-            arg = fc[1]
-            args = arg[1:-1].split(" ")
-            for i, a in enumerate(args):
-                args[i] = evaluate(a)
+            arg = fc[1][:-1]
+            args = [evaluate(a.strip()) for a in arg.split(",") if a.strip()]
         else:
             args = []
 
@@ -209,7 +221,7 @@ def evaluate(x):
     if x in variables:
         return variables[x]
     else:
-        print(f"Unable to evaluate `{x}` ({filename}, {lineNum})")
+        print(f"Unable to evaluate value `{x}` ({filename}, {lineNum})")
         sys.exit(0)
 
 # parse as type func
@@ -232,7 +244,7 @@ def typeParse(x, typ):
             sys.exit(0)
     
     except ValueError:
-        print(f"Unable to parse `{x}` as `{typ}` ({filename}, {lineNum})")
+        print(f"Unable to parse value `{x}` as type `{typ}` ({filename}, {lineNum})")
         sys.exit(0)
         
 # check variable interference func
@@ -263,7 +275,7 @@ try:
         lines = file.readlines()
         while lineNum <= len(lines):
             # line
-            line = lines[lineNum - 1]
+            line = lines[lineNum - 1].strip()
 
             # check for inline comments
             ign = False
@@ -305,7 +317,7 @@ try:
                     print(f"Waited for `{ms.strip()}` ms ({filename}, {lineNum})")
 
             # variable
-            elif line.startswith("var "):
+            elif line.startswith("set "):
                 name, val = line[4:].split("=", 1)
                 variables[varInter(name).strip()] = evaluate(val)
                 if debug:
@@ -318,7 +330,7 @@ try:
                 
             # input
             elif line.startswith("inp "):
-                var, typ, ph = line[4:].split(" ", 2)
+                var, typ, ph = tokenize(line[4:])
                 if debug:
                     print(f"Inputting `{typ.strip()}`, an `{var.strip()}` ({filename}, {lineNum})")
                 variables[varInter(var)] = typeParse(input(evaluate(ph)), typ)
@@ -343,14 +355,12 @@ try:
 
             # function call
             elif line.startswith("."):
-                func, arg = line.split(" ", 1)
+                func, arg = line.split("(")
                 if debug:
                     print(f"Running function `{func[1:]}` ({filename}, {lineNum})")
                 
                 # parse arguments
-                args = arg[1:-1].split(" ")
-                for i, a in enumerate(args):
-                    args[i] = evaluate(a)
+                args = [evaluate(a.strip()) for a in arg.split(",") if a.strip()]
 
                 # run function
                 if func[1:] in ifunctions:
@@ -361,9 +371,9 @@ try:
                     print(f"Function `{func[1:]}` not found ({filename}, {lineNum})")
                     sys.exit(0)
 
-            # unknown
+            # variable
             else:
-                print(f"Unable to parse `{line}` ({filename}, {lineNum})")
+                print(f"Unable to parse line `{line}` ({filename}, {lineNum})")
                 sys.exit(0)
 
             lineNum += 1
