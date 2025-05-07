@@ -6,11 +6,11 @@ inp y flt "Enter your second number (y): "
 
 ~~ calculate and output answers
 out ""
-out "Answers (add, sub, mult, div, exp, sqrt of x, sqrt of y):" 
+out "Answers (add, sub, mult, div, exp, sqrt x, sqrt y):" 
 out x + y
 out x - y 
 out x * y
 out x / y  
 out x ^ y
-out .msqrt (x)
-out .msqrt (y)
+out .msqrt(x)
+out .msqrt(y)
