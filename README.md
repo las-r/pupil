@@ -19,9 +19,9 @@ Explain code
 ```
 
 ### Variables
-Store data
+Store / set data
 ```
-var greeting = "Hello, world!"
+set greeting = "Hello, world!"
 ```
 
 ### If
