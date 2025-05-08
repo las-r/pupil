@@ -103,6 +103,7 @@ stop
 ```
 
 ### In-built functions
-- **Mathematical**: `.msqrt (x)`, `.mfloor (x)`, `.mceil (x)`, `.msin (x)`, `.mcos (x)`, `.mtan (x)`, `.mround (x, d)`
-- **Random**: `.rint (min, max)`
+- **Mathematical**: `.msqrt(x)`, `.mfloor(x)`, `.mceil(x)`, `.msin(x)`, `.mcos(x)`, `.mtan(x)`, `.mround(x, d)`
+- **Random**: `.rint(min, max)`
 - **Time**: `.tunix`
+- **Data type**: `.int(x)`, `.flt(x)`, `.str(x)`, `.bln(x)`
