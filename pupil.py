@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.2.1
+# version 0.3.0
 
 # inbuilt funcs
 def msqrt(x):
