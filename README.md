@@ -29,7 +29,7 @@ If condition do action
 ```
 if value == 69  
     out "hehehe"  
-elseif otherValue == value  
+elif otherValue == value  
     out "whoa they're equal"  
 else  
     out "sad"  
