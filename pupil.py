@@ -102,6 +102,28 @@ def tokenize(x):
 
     return tokenized
 
+# blockify func
+def blockify(it):
+    global lineNum
+    eNum = lineNum
+    tags = ["end"]
+
+    # if block
+    if it:
+        tags.append("else")
+        tags.append("elif")
+
+    # check for ending tag
+    try:
+        while lines[eNum - 1].strip() not in tags:
+                eNum += 1
+    except IndexError:
+        print(f"Block doesn't have ending tag ({filename}, {lineNum})")
+        sys.exit(1)
+
+    # return end tag
+    return eNum
+
 # evaluate func
 def evaluate(x):
     x = x.strip()
@@ -252,11 +274,163 @@ def typeParse(x, typ):
 # check variable interference func
 def varInter(x):
     invChars = "1234567890`~!@#$%^&*(){}[]-+/\\.<>,;:'=\""
-    res = "int,flt,bln,str,tunix,msqrt,mfloor,mceil,mfact,msin,mcos,mtan,masin,rint,rpick,sort,var,if,elseif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop".split(",")
+    res = "int,flt,bln,str,tunix,msqrt,mfloor,mceil,mfact,msin,mcos,mtan,masin,rint,rpick,sort,var,if,elif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop".split(",")
     
     if any(c in x for c in invChars) or x in res:
         print(f"Bad variable name `{x}` ({filename}, {lineNum})")
         sys.exit(1)
+
+# run line func
+def runLine(line):
+    global lineNum, variables, functions
+
+    # check for inline comments
+    ign = False
+    il = 0
+    for l in line:
+        if l == '"':
+            ign = not ign
+        if not ign:
+            if l == "~" and line[il + 1] == "~":
+                line = line[:il]
+                if debug:
+                    print(f"Ignoring inline comment ({filename}, {lineNum})")
+                break
+        il += 1   
+
+    # comment, skip, and empty
+    if line.startswith("~~") or line.strip() in ["skip", ""]:
+        if debug:
+            print(f"Skipping ({filename}, {lineNum})")
+
+    # clear console
+    elif line.strip() == "clear":
+        if debug:
+            print(f"Cleared console ({filename}, {lineNum})")
+        else:
+            clearCmd()
+
+    # stop program
+    elif line.strip() == "stop":
+        if debug:
+            print(f"Stopping program ({filename}, {lineNum})")
+        sys.exit(0)
+
+    # wait
+    elif line.startswith("wait "):
+        ms = line[5:]
+        time.sleep(evaluate(ms) / 1000)
+        if debug:
+            print(f"Waited for `{ms.strip()}` ms ({filename}, {lineNum})")
+
+    # variable
+    elif line.startswith("set "):
+        name, val = line[4:].split("=", 1)
+        varInter(name.strip())
+
+        variables[name.strip()] = evaluate(val)
+        if debug:
+            print(f"Set variable `{name.strip()}` to `{val.strip()}` ({filename}, {lineNum})")
+
+    # output
+    elif line.startswith("out "):
+        output = line[4:]
+        print(evaluate(output))
+
+    # input
+    elif line.startswith("inp "):
+        var, typ, ph = tokenize(line[4:])
+        varInter(var)
+
+        if debug:
+            print(f"Inputting `{typ.strip()}`, an `{var.strip()}` ({filename}, {lineNum})")
+        variables[var] = typeParse(input(evaluate(ph)), typ)
+        if debug:
+            print(f"Inputed `{variables[var]}` ({filename}, {lineNum})")
+
+    # jump
+    elif line.startswith("jump "):
+        ln = line[5:]
+        if debug:
+            print(f"Jumping `{ln.strip()}` lines ({filename}, {lineNum})")
+
+        lineNum += evaluate(ln)
+        return
+
+    # jumpto
+    elif line.startswith("jumpto "):
+        ln = line[7:]
+        if debug:
+            print(f"Jumping to line `{ln.strip()}` ({filename}, {lineNum})")
+
+        lineNum = evaluate(ln)
+        return
+
+    # function call
+    elif line.startswith("."):
+        func, arg = line.split("(")
+        if debug:
+            print(f"Running function `{func[1:]}` ({filename}, {lineNum})")
+
+        # parse arguments
+        args = [evaluate(a.strip()) for a in arg.split(",") if a.strip()]
+
+        # run function
+        if func[1:] in ifunctions:
+            ifunctions[func[1:]](*args)
+        if func[1:] in functions:
+            pass # implement this later
+        else:
+            print(f"Function `{func[1:]}` not found ({filename}, {lineNum})")
+            sys.exit(1)
+
+    # if
+    elif line.startswith("if "):
+        arg = evaluate(line[3:])
+
+        if debug:
+            print(f"Checking if ({filename}, {lineNum})")
+
+        # run block
+        bNum = blockify(True)
+        if arg:
+            if debug:
+                print(f"Running if ({filename}, {lineNum})")
+
+            lineNum += 1
+            while lineNum < bNum:
+                runLine(lines[lineNum - 1].strip())
+        else:
+            if debug:
+                print(f"Skipping if ({filename}, {lineNum})")
+
+            lineNum = bNum
+
+    # while
+    elif line.startswith("while "):
+        arg = evaluate(line[6:])
+        wNum = lineNum
+
+        if debug:
+            print(f"Checking while ({filename}, {lineNum})")
+
+        # run block
+        bNum = blockify(True)
+        while arg:
+            arg = evaluate(lines[wNum - 1].strip()[6:])
+            lineNum += 1
+            while lineNum < bNum:
+                runLine(lines[lineNum - 1].strip())
+
+        if debug:
+            print(f"Finishing while ({filename}, {lineNum})")
+
+    # unknown
+    else:
+        print(f"Unable to parse line `{line}` ({filename}, {lineNum})")
+        sys.exit(1)
+
+    lineNum += 1
 
 # arguments
 if len(sys.argv) == 2:
@@ -275,117 +449,7 @@ try:
     with open(filename, "r") as file:
         lines = file.readlines()
         while lineNum <= len(lines):
-            # line
-            line = lines[lineNum - 1].strip()
-
-            # check for inline comments
-            ign = False
-            il = 0
-            for l in line:
-                if l == '"':
-                    ign = not ign
-                if not ign:
-                    if l == "~" and line[il + 1] == "~":
-                        line = line[:il]
-                        if debug:
-                            print(f"Ignoring inline comment ({filename}, {lineNum})")
-                        break
-                il += 1   
-
-            # comment, skip, and empty
-            if line.startswith("~~") or line.strip() in ["skip", ""]:
-                if debug:
-                    print(f"Skipping ({filename}, {lineNum})")
-
-            # clear console
-            elif line.strip() == "clear":
-                if debug:
-                    print(f"Cleared console ({filename}, {lineNum})")
-                else:
-                    clearCmd()
-
-            # stop program
-            elif line.strip() == "stop":
-                if debug:
-                    print(f"Stopping program ({filename}, {lineNum})")
-                sys.exit(0)
-
-            # wait
-            elif line.startswith("wait "):
-                ms = line[5:]
-                time.sleep(evaluate(ms) / 1000)
-                if debug:
-                    print(f"Waited for `{ms.strip()}` ms ({filename}, {lineNum})")
-
-            # variable
-            elif line.startswith("set "):
-                name, val = line[4:].split("=", 1)
-                varInter(name.strip())
-
-                variables[name.strip()] = evaluate(val)
-                if debug:
-                    print(f"Set variable `{name.strip()}` to `{val.strip()}` ({filename}, {lineNum})")
-
-            # output
-            elif line.startswith("out "):
-                output = line[4:]
-                print(evaluate(output))
-                
-            # input
-            elif line.startswith("inp "):
-                var, typ, ph = tokenize(line[4:])
-                varInter(var)
-
-                if debug:
-                    print(f"Inputting `{typ.strip()}`, an `{var.strip()}` ({filename}, {lineNum})")
-                variables[var] = typeParse(input(evaluate(ph)), typ)
-                if debug:
-                    print(f"Inputed `{variables[var]}` ({filename}, {lineNum})")
-
-            # jump
-            elif line.startswith("jump "):
-                ln = line[5:]
-                if debug:
-                    print(f"Jumping `{ln.strip()}` lines ({filename}, {lineNum})")
-                    
-                lineNum += evaluate(ln)
-                continue
-
-            # jumpto
-            elif line.startswith("jumpto "):
-                ln = line[7:]
-                if debug:
-                    print(f"Jumping to line `{ln.strip()}` ({filename}, {lineNum})")
-
-                lineNum = evaluate(ln)
-                continue
-
-            # function call
-            elif line.startswith("."):
-                func, arg = line.split("(")
-                if debug:
-                    print(f"Running function `{func[1:]}` ({filename}, {lineNum})")
-                
-                # parse arguments
-                args = [evaluate(a.strip()) for a in arg.split(",") if a.strip()]
-
-                # run function
-                if func[1:] in ifunctions:
-                    ifunctions[func[1:]](*args)
-                if func[1:] in functions:
-                    pass # implement this later
-                else:
-                    print(f"Function `{func[1:]}` not found ({filename}, {lineNum})")
-                    sys.exit(1)
-
-            # variable
-            else:
-                print(f"Unable to parse line `{line}` ({filename}, {lineNum})")
-                sys.exit(1)
-
-            lineNum += 1
-
-# pil file not found
+            runLine(lines[lineNum - 1].strip())
 except FileNotFoundError:
     print(f"File `{filename}` not found")
     sys.exit(1)
