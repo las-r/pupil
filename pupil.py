@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.3.0
+# version 0.3.1
 
 # inbuilt funcs
 def msqrt(x):
@@ -54,6 +54,7 @@ ifunctions = {"msqrt": msqrt,
               "int": yint,
               "flt": yflt,
               "bln": ybln}
+sys.set_int_max_str_digits(16384)
 
 # clear console func
 def clearCmd():
@@ -408,19 +409,20 @@ def runLine(line):
 
     # while
     elif line.startswith("while "):
-        arg = evaluate(line[6:])
-        wNum = lineNum
+        args = line[6:]
+        wNum = lineNum + 1
 
         if debug:
             print(f"Checking while ({filename}, {lineNum})")
 
         # run block
-        bNum = blockify(True)
-        while arg:
-            arg = evaluate(lines[wNum - 1].strip()[6:])
-            lineNum += 1
+        bNum = blockify(False)
+        lineNum += 1
+        while evaluate(args):
             while lineNum < bNum:
                 runLine(lines[lineNum - 1].strip())
+            lineNum = wNum
+        lineNum = bNum
 
         if debug:
             print(f"Finishing while ({filename}, {lineNum})")
