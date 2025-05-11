@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.3.1
+# version 0.4.0
 
 # inbuilt funcs
 def msqrt(x):
@@ -39,6 +39,7 @@ def ybln(x):
 # environment
 debug = False
 lineNum = 1
+ignLines = False
 variables = {}
 functions = {}
 ifunctions = {"msqrt": msqrt, 
@@ -70,43 +71,65 @@ def clearCmd():
 # tokenize func
 def tokenize(x):
     x = x.strip()
-
-    # tokenized output
     tokenized = []
-
-    # empty string check
     if x == "":
         return tokenized
 
-    # inter over chars
+    # flags
     igns = False
+    infunc = False
     token = ""
-    for c in x:
-        # ignore strings
+    
+    # char loop
+    i = 0
+    while i < len(x):
+        c = x[i]
+
+        # string
         if c == '"':
             igns = not igns
+            token += c
+            i += 1
+            continue
+        if igns:
+            token += c
+            i += 1
+            continue
 
-        # split
-        if not igns:
-            if c == " ":
-                if token:
-                    tokenized.append(token)
-                    token = ""
-            else:
-                token += c
+        # function
+        if not infunc and c == '.':
+            if token:
+                tokenized.append(token)
+                token = ""
+            infunc = True
+            token += c
+            i += 1
+            continue
+        if infunc:
+            token += c
+            if c == ')':
+                tokenized.append(token)
+                token = ""
+                infunc = False
+            i += 1
+            continue
+
+        # regular split
+        if c == ' ':
+            if token:
+                tokenized.append(token)
+                token = ""
         else:
             token += c
-    
-    # last token (if any)
+        i += 1
+
     if token:
         tokenized.append(token)
 
     return tokenized
 
 # blockify func
-def blockify(it):
-    global lineNum
-    eNum = lineNum
+def blockify(it, lineNum):
     tags = ["end"]
 
     # if block
@@ -116,14 +139,21 @@ def blockify(it):
 
     # check for ending tag
     try:
-        while lines[eNum - 1].strip() not in tags:
-                eNum += 1
+        cur = lines[lineNum - 1].strip()
+        while cur not in tags:
+                lineNum += 1
+                cur = lines[lineNum - 1].strip()
+            
+                # skip nested conditions
+                if cur.startswith(("if ", "while ")):
+                    lineNum = blockify(False, lineNum)
+                
     except IndexError:
         print(f"Block doesn't have ending tag ({filename}, {lineNum})")
         sys.exit(1)
 
     # return end tag
-    return eNum
+    return lineNum
 
 # evaluate func
 def evaluate(x):
@@ -143,7 +173,7 @@ def evaluate(x):
         while i < len(tokens):
             op = tokens[i]
             val = evaluate(tokens[i + 1])
-
+            
             # arithmetic
             if op == "+":
                 total += val
@@ -193,6 +223,7 @@ def evaluate(x):
             # unknown
             else:
                 print(f"Unknown operator `{op}` ({filename}, {lineNum})")
+                sys.exit(1)
 
             i += 2
         return total
@@ -284,6 +315,9 @@ def varInter(x):
 # run line func
 def runLine(line):
     global lineNum, variables, functions
+    
+    if debug:
+        print(f"Running line `{line}` ({filename}, {lineNum})")
 
     # check for inline comments
     ign = False
@@ -326,12 +360,45 @@ def runLine(line):
 
     # variable
     elif line.startswith("set "):
-        name, val = line[4:].split("=", 1)
+        name, op, val = tokenize(line[4:])
         varInter(name.strip())
-
-        variables[name.strip()] = evaluate(val)
+        
+        if op == "=":
+            variables[name.strip()] = evaluate(val)
+        else:
+            if name in variables:
+                if op == "+=":
+                    variables[name.strip()] += evaluate(val)
+                elif op == "-=":
+                    variables[name.strip()] -= evaluate(val)
+                elif op == "*=":
+                    variables[name.strip()] *= evaluate(val)
+                elif op == "/=":
+                    variables[name.strip()] /= evaluate(val)
+                elif op == "^=":
+                    variables[name.strip()] **= evaluate(val)
+                elif op == "%=":
+                    variables[name.strip()] %= evaluate(val)
+                    
+                elif op == "&=":
+                    variables[name.strip()] &= evaluate(val)
+                elif op == "|=":
+                    variables[name.strip()] |= evaluate(val)
+                elif op == ":=":
+                    variables[name.strip()] ^= evaluate(val)
+                    
+                elif op == "..=":
+                    variables[name.strip()] = str(variables[name.strip()]) + str(evaluate(val))
+                    
+                else:
+                    print(f"Assignment operator `{op}` not found ({filename}, {lineNum})")
+                    sys.exit(1)
+            else:
+                print(f"Variable `{name}` not found ({filename}, {lineNum})")
+                sys.exit(1)
+        
         if debug:
-            print(f"Set variable `{name.strip()}` to `{val.strip()}` ({filename}, {lineNum})")
+            print(f"Set variable `{name.strip()}` to {variables[name.strip()]} ({filename}, {lineNum})")
 
     # output
     elif line.startswith("out "):
@@ -393,7 +460,7 @@ def runLine(line):
             print(f"Checking if ({filename}, {lineNum})")
 
         # run block
-        bNum = blockify(True)
+        bNum = blockify(True, lineNum)
         if arg:
             if debug:
                 print(f"Running if ({filename}, {lineNum})")
@@ -401,11 +468,26 @@ def runLine(line):
             lineNum += 1
             while lineNum < bNum:
                 runLine(lines[lineNum - 1].strip())
+            lineNum = blockify(False, lineNum)
+            
+        # else & elif
         else:
             if debug:
                 print(f"Skipping if ({filename}, {lineNum})")
 
             lineNum = bNum
+            eLine = lines[lineNum - 1].strip()
+            
+            # else
+            if eLine == "else":
+                if debug:
+                    print(f"Running else ({filename}, {lineNum})")
+                
+                # run b;pcl
+                lineNum += 1
+                while lineNum < blockify(True, lineNum):
+                    runLine(lines[lineNum - 1].strip())
+                lineNum = blockify(False, lineNum)
 
     # while
     elif line.startswith("while "):
@@ -416,7 +498,7 @@ def runLine(line):
             print(f"Checking while ({filename}, {lineNum})")
 
         # run block
-        bNum = blockify(False)
+        bNum = blockify(False, lineNum)
         lineNum += 1
         while evaluate(args):
             while lineNum < bNum:
@@ -455,3 +537,6 @@ try:
 except FileNotFoundError:
     print(f"File `{filename}` not found")
     sys.exit(1)
+except KeyboardInterrupt:
+    print(f"Program interrupted by user ({filename}, {lineNum})")
+    sys.exit(0)
