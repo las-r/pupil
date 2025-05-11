@@ -1,0 +1,24 @@
+~~ random number guesser
+
+~~ number to guess
+set number = .rint(1, 100)
+
+~~ guessing loop
+inp guess int "Enter your guess (1-100): "
+while guess != number
+    ~~ too high
+    if guess > number
+        out "Too high!"
+    end
+
+    ~~ too low
+    if guess < number
+        out "Too low!"
+    end
+
+    ~~ new guess
+    inp guess int "Enter your guess (1-100): "
+end
+
+~~ correct number
+out "You guessed the number!"
