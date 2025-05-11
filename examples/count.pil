@@ -1,0 +1,13 @@
+~~ counting program
+
+~~ initial variable
+set x = 1
+
+~~ counting loop
+while true
+    ~~ output x
+    out x
+
+    ~~ increment x
+    set x += 1
+end
