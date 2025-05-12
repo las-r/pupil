@@ -40,6 +40,7 @@ def ybln(x):
 debug = False
 lineNum = 1
 ignLines = False
+inFunc = False
 variables = {}
 functions = {}
 ifunctions = {"msqrt": msqrt, 
@@ -85,8 +86,8 @@ def tokenize(x):
     while i < len(x):
         c = x[i]
 
-        # string
-        if c == '"':
+        # string and parenthese
+        if c in ['"', "(", ")"]:
             igns = not igns
             token += c
             i += 1
@@ -313,7 +314,7 @@ def varInter(x):
         sys.exit(1)
 
 # run line func
-def runLine(line):
+def runLine(line, inc):
     global lineNum, variables, functions
     
     if debug:
@@ -436,18 +437,21 @@ def runLine(line):
 
     # function call
     elif line.startswith("."):
-        func, arg = line.split("(")
+        try:
+            func, arg = line.split("(")
+            args = [evaluate(a.strip()) for a in arg.split(",") if a.strip()]
+        except ValueError:
+            func = line
+
         if debug:
             print(f"Running function `{func[1:]}` ({filename}, {lineNum})")
-
-        # parse arguments
-        args = [evaluate(a.strip()) for a in arg.split(",") if a.strip()]
 
         # run function
         if func[1:] in ifunctions:
             ifunctions[func[1:]](*args)
         if func[1:] in functions:
-            pass # implement this later
+            for line in functions[func[1:]].split(";"):
+                runLine(line.strip(), False)
         else:
             print(f"Function `{func[1:]}` not found ({filename}, {lineNum})")
             sys.exit(1)
@@ -467,7 +471,7 @@ def runLine(line):
 
             lineNum += 1
             while lineNum < bNum:
-                runLine(lines[lineNum - 1].strip())
+                runLine(lines[lineNum - 1].strip(), True)
             lineNum = blockify(False, lineNum)
             
         # else & elif
@@ -486,7 +490,7 @@ def runLine(line):
                 # run b;pcl
                 lineNum += 1
                 while lineNum < blockify(True, lineNum):
-                    runLine(lines[lineNum - 1].strip())
+                    runLine(lines[lineNum - 1].strip(), True)
                 lineNum = blockify(False, lineNum)
 
     # while
@@ -502,19 +506,48 @@ def runLine(line):
         lineNum += 1
         while evaluate(args):
             while lineNum < bNum:
-                runLine(lines[lineNum - 1].strip())
+                runLine(lines[lineNum - 1].strip(), True)
             lineNum = wNum
         lineNum = bNum
 
         if debug:
             print(f"Finishing while ({filename}, {lineNum})")
 
+    # function definition
+    elif line.startswith("func "):
+        name = line[5:]
+        endLine = blockify(False, lineNum)
+        function = ""
+
+        # add lines to function
+        lineNum += 1
+        while lineNum < endLine:
+            function += f"{lines[lineNum - 1].strip()};"
+            lineNum += 1
+
+        # debug
+        if debug:
+            print(f"Defined function `{name.strip()}` as `{function}` ({filename}, {lineNum})")
+        
+        # add function to list
+        functions[name.strip()] = function
+
+    # return
+    #elif line.startswith("ret "):
+        #if inFunc:
+            #pass # implement this later
+        #else:
+            #print(f"Return outside of function ({filename}, {lineNum})")
+            #sys.exit(1)
+
     # unknown
     else:
         print(f"Unable to parse line `{line}` ({filename}, {lineNum})")
         sys.exit(1)
 
-    lineNum += 1
+    # increment line
+    if inc:
+        lineNum += 1
 
 # arguments
 if len(sys.argv) == 2:
@@ -533,7 +566,7 @@ try:
     with open(filename, "r") as file:
         lines = file.readlines()
         while lineNum <= len(lines):
-            runLine(lines[lineNum - 1].strip())
+            runLine(lines[lineNum - 1].strip(), True)
 except FileNotFoundError:
     print(f"File `{filename}` not found")
     sys.exit(1)
