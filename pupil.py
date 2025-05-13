@@ -558,7 +558,7 @@ elif len(sys.argv) == 3:
         debug = True
         print("DEBUG MODE")
 else:
-    print("Usage: python pupil.py file.pil [--debug]")
+    print("Pupil v0.5.1\nUsage: python pupil.py file.pil [--debug]")
     sys.exit(1)
 
 # run file
