@@ -42,6 +42,7 @@ lineNum = 1
 ignLines = False
 inFunc = False
 variables = {}
+tempVars = {}
 functions = {}
 ifunctions = {"msqrt": msqrt, 
               "mfloor": mfloor, 
@@ -533,12 +534,12 @@ def runLine(line, inc):
         functions[name.strip()] = function
 
     # return
-    #elif line.startswith("ret "):
-        #if inFunc:
-            #pass # implement this later
-        #else:
-            #print(f"Return outside of function ({filename}, {lineNum})")
-            #sys.exit(1)
+    elif line.startswith("ret "):
+        if inFunc:
+            pass # implement this later
+        else:
+            print(f"Return outside of function ({filename}, {lineNum})")
+            sys.exit(1)
 
     # unknown
     else:
