@@ -6,35 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.5.1
-
-# inbuilt funcs
-def msqrt(x):
-    return math.sqrt(x)
-def mfloor(x):
-    return int(x)
-def mceil(x):
-    return math.ceil(x)
-def msin(x):
-    return math.sin(x)
-def mcos(x):
-    return math.cos(x)
-def mtan(x):
-    return math.tan(x)
-def mround(x, d):
-    return round(x, d)
-def rint(n, x):
-    return random.randint(n, x)
-def tunix():
-    return time.time()
-def ystr(x):
-    return str(x)
-def yint(x):
-    return int(x)
-def yflt(x):
-    return float(x)
-def ybln(x):
-    return bool(x)
+# version 0.5.2
 
 # environment
 debug = False
@@ -44,34 +16,38 @@ inFunc = False
 variables = {}
 tempVars = {}
 functions = {}
-ifunctions = {"msqrt": msqrt, 
-              "mfloor": mfloor, 
-              "mceil": mceil, 
-              "msin": msin, 
-              "mcos": mcos, 
-              "mtan": mtan, 
-              "rint": rint, 
-              "mround": mround,
-              "tunix": tunix,
-              "str": ystr,
-              "int": yint,
-              "flt": yflt,
-              "bln": ybln}
+ifunctions = {"msqrt": math.sqrt, 
+              "flr": int, 
+              "ceil": math.ceil, 
+              "sin": math.sin, 
+              "cos": math.cos, 
+              "tan": math.tan, 
+              "rand": random.randint, 
+              "rnd": round,
+              "unix": time.time,
+              "str": str,
+              "int": int,
+              "flt": float,
+              "bln": bool,
+              "bin": bin,
+              "hex": hex,
+              "arr": list,
+              "len": len}
 sys.set_int_max_str_digits(16384)
 
 # clear console func
 def clearCmd():
     s = platform.system()
     if s == "Windows":
-        os.system('cls')
+        os.system("cls")
     elif s in ("Linux", "Darwin"):
-        os.system('clear')
+        os.system("clear")
     else:
         print(f"Operating system not supported for clear ({filename}, {lineNum})")
         sys.exit(1)
 
 # tokenize func
-def tokenize(x):
+def tokenize(x, spl):
     x = x.strip()
     tokenized = []
     if x == "":
@@ -87,19 +63,8 @@ def tokenize(x):
     while i < len(x):
         c = x[i]
 
-        # string and parenthese
-        if c in ['"', "(", ")"]:
-            igns = not igns
-            token += c
-            i += 1
-            continue
-        if igns:
-            token += c
-            i += 1
-            continue
-
         # function
-        if not infunc and c == '.':
+        if not infunc and c == ".":
             if token:
                 tokenized.append(token)
                 token = ""
@@ -109,15 +74,26 @@ def tokenize(x):
             continue
         if infunc:
             token += c
-            if c == ')':
+            if c == ")":
                 tokenized.append(token)
                 token = ""
                 infunc = False
             i += 1
             continue
 
+        # string and parenthese
+        if c in list('"()[]'):
+            igns = not igns
+            token += c
+            i += 1
+            continue
+        if igns:
+            token += c
+            i += 1
+            continue
+
         # regular split
-        if c == ' ':
+        if c == spl:
             if token:
                 tokenized.append(token)
                 token = ""
@@ -168,7 +144,7 @@ def evaluate(x):
         return
     
     # operators
-    tokens = tokenize(x)
+    tokens = tokenize(x, " ")
     if len(tokens) >= 3 and len(tokens) % 2 == 1:
         total = evaluate(tokens[0])
         i = 1
@@ -233,6 +209,15 @@ def evaluate(x):
     # type
     if (x.startswith('"') and x.endswith('"')):
         return x[1:-1]
+    if (x.startswith("[") and x.endswith("]")):
+        x = x[1:-1].split(",")
+        for i, obj in enumerate(x):
+            x[i] = evaluate(obj.strip())
+        return x
+    if x.startswith("0b"):
+        return bin(x)
+    if x.startswith("0x"):
+        return hex(x)
     if x == "true":
         return True
     if x == "false":
@@ -247,17 +232,26 @@ def evaluate(x):
         return float(x)
     except ValueError:
         pass
+
+    # array index
+    if x.endswith("]"):
+        try:
+            i = str(x).split("[")
+            return evaluate(i[0])[evaluate(i[1][:-1])]
+        except IndexError:
+            print(f"Index out of range of list ({filename}, {lineNum})")
+            sys.exit(1)
     
     # function calls
     if x.startswith("."):
-        fc = x.split("(")
+        fc = x.split("(", 1)
         if debug:
             print(f"Running function `{fc[0][1:]}` ({filename}, {lineNum})")
 
         # parse arguments
         if len(fc) == 2:
             arg = fc[1][:-1]
-            args = [evaluate(a.strip()) for a in arg.split(",") if a.strip()]
+            args = [evaluate(a.strip()) for a in tokenize(arg, ",") if a.strip()]
         else:
             args = []
 
@@ -308,7 +302,7 @@ def typeParse(x, typ):
 # check variable interference func
 def varInter(x):
     invChars = "1234567890`~!@#$%^&*(){}[]-+/\\.<>,;:'=\""
-    res = "int,flt,bln,str,tunix,msqrt,mfloor,mceil,mfact,msin,mcos,mtan,masin,rint,rpick,sort,var,if,elif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop".split(",")
+    res = "int,flt,bln,str,unix,sqrt,flr,ceil,sin,cos,tan,rand,pick,sort,var,if,elif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop,ret,bin,hex".split(",")
     
     if any(c in x for c in invChars) or x in res:
         print(f"Bad variable name `{x}` ({filename}, {lineNum})")
@@ -362,7 +356,7 @@ def runLine(line, inc):
 
     # variable
     elif line.startswith("set "):
-        name, op, val = tokenize(line[4:])
+        name, op, val = tokenize(line[4:], " ")
         varInter(name.strip())
         
         if op == "=":
@@ -409,7 +403,7 @@ def runLine(line, inc):
 
     # input
     elif line.startswith("inp "):
-        var, typ, ph = tokenize(line[4:])
+        var, typ, ph = tokenize(line[4:], " ")
         varInter(var)
 
         if debug:
