@@ -1,0 +1,7 @@
+~~ vertical hello world
+
+~~ out loop
+for char "Hello, world!"
+    ~~ out character
+    out char
+end
