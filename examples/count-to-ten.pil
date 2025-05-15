@@ -1,0 +1,7 @@
+~~ count to 10 example
+
+~~ for loop using range function
+for i .range(10)
+    ~~ output numbers 1 - 10
+    out i + 1
+end
