@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.5.2
+# version 0.6.0
 
 # environment
 debug = False
@@ -32,7 +32,8 @@ ifunctions = {"msqrt": math.sqrt,
               "bin": bin,
               "hex": hex,
               "arr": list,
-              "len": len}
+              "len": len,
+              "range": range}
 sys.set_int_max_str_digits(16384)
 
 # clear console func
@@ -302,7 +303,7 @@ def typeParse(x, typ):
 # check variable interference func
 def varInter(x):
     invChars = "1234567890`~!@#$%^&*(){}[]-+/\\.<>,;:'=\""
-    res = "int,flt,bln,str,unix,sqrt,flr,ceil,sin,cos,tan,rand,pick,sort,var,if,elif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop,ret,bin,hex".split(",")
+    res = "int,flt,bln,str,unix,sqrt,flr,ceil,sin,cos,tan,rand,pick,sort,var,if,elif,else,end,jump,jumpto,while,true,false,out,inp,func,get,wait,skip,stop,ret,bin,hex,range".split(",")
     
     if any(c in x for c in invChars) or x in res:
         print(f"Bad variable name `{x}` ({filename}, {lineNum})")
@@ -499,6 +500,10 @@ def runLine(line, inc):
         # run block
         bNum = blockify(False, lineNum)
         lineNum += 1
+
+        if debug:
+            print(f"Running while ({filename}, {lineNum})")
+
         while evaluate(args):
             while lineNum < bNum:
                 runLine(lines[lineNum - 1].strip(), True)
@@ -507,6 +512,30 @@ def runLine(line, inc):
 
         if debug:
             print(f"Finishing while ({filename}, {lineNum})")
+
+    # for
+    elif line.startswith("for "):
+        i, array = tokenize(line[4:], " ")
+        array = evaluate(array)
+
+        wNum = lineNum + 1
+        variables[i] = None
+        
+        bNum = blockify(False, lineNum)
+        lineNum += 1
+
+        if debug:
+            print(f"Running for ({filename}, {lineNum})")
+
+        for n in array:
+            variables[i] = n
+            while lineNum < bNum:
+                runLine(lines[lineNum - 1].strip(), True)
+            lineNum = wNum
+        lineNum = bNum
+
+        if debug:
+            print(f"Finishing for ({filename}, {lineNum})")
 
     # function definition
     elif line.startswith("func "):
