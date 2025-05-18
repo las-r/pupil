@@ -1,0 +1,5 @@
+~~ operator precedence example
+
+~~ output
+out 1 + 4 * 2
+out (1 + 4) * 2
