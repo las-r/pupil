@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.6.0
+# version 0.7.0
 
 # environment
 debug = False
@@ -16,15 +16,18 @@ inFunc = False
 variables = {}
 tempVars = {}
 functions = {}
-ifunctions = {"msqrt": math.sqrt, 
+ifunctions = {"sqrt": math.sqrt, 
               "flr": int, 
               "ceil": math.ceil, 
               "sin": math.sin, 
               "cos": math.cos, 
-              "tan": math.tan, 
-              "rand": random.randint, 
+              "tan": math.tan,
               "rnd": round,
+              
+              "rand": random.randint, 
+              
               "unix": time.time,
+              
               "str": str,
               "int": int,
               "flt": float,
@@ -32,9 +35,20 @@ ifunctions = {"msqrt": math.sqrt,
               "bin": bin,
               "hex": hex,
               "arr": list,
+              
               "len": len,
               "range": range}
 sys.set_int_max_str_digits(16384)
+precedence = [
+    ["++"],
+    ["||"],
+    ["&&"],
+    ["==", "!=", "<", ">", "<=", ">="],
+    ["|", "&", ":"],
+    ["+", "-"],
+    ["*", "/", "%"],
+    ["^"]
+]
 
 # clear console func
 def clearCmd():
@@ -50,22 +64,32 @@ def clearCmd():
 # tokenize func
 def tokenize(x, spl):
     x = x.strip()
-    tokenized = []
     if x == "":
-        return tokenized
-
-    # flags
-    igns = False
-    infunc = False
-    token = ""
+        return []
     
-    # char loop
+    if debug:
+        print(f"Tokenizing `{x}` by `{spl}` ({filename}, {lineNum})")
+
+    tokenized = []
+    token = ""
+    in_string = False
+    parens = 0
+    brackets = 0
+    infunc = False
+
     i = 0
     while i < len(x):
         c = x[i]
 
-        # function
-        if not infunc and c == ".":
+        # handle string
+        if c == '"':
+            in_string = not in_string
+            token += c
+            i += 1
+            continue
+
+        # handle function (starts with dot and ends with closing paren)
+        if not in_string and not infunc and c == ".":
             if token:
                 tokenized.append(token)
                 token = ""
@@ -76,34 +100,38 @@ def tokenize(x, spl):
         if infunc:
             token += c
             if c == ")":
+                infunc = False
                 tokenized.append(token)
                 token = ""
-                infunc = False
             i += 1
             continue
 
-        # string and parenthese
-        if c in list('"()[]'):
-            igns = not igns
-            token += c
-            i += 1
-            continue
-        if igns:
-            token += c
-            i += 1
-            continue
+        # handle parentheses and brackets
+        if not in_string:
+            if c == "(":
+                parens += 1
+            elif c == ")":
+                parens -= 1
+            elif c == "[":
+                brackets += 1
+            elif c == "]":
+                brackets -= 1
 
-        # regular split
-        if c == spl:
+        # splitting logic
+        if c == spl and not in_string and parens == 0 and brackets == 0:
             if token:
                 tokenized.append(token)
                 token = ""
         else:
             token += c
+
         i += 1
 
     if token:
         tokenized.append(token)
+        
+    if debug:
+        print(f"Tokenized: `{tokenized}` ({filename}, {lineNum})")
 
     return tokenized
 
@@ -134,91 +162,102 @@ def blockify(it, lineNum):
     # return end tag
     return lineNum
 
-# evaluate func
+# Flattened set of all operators
+all_ops = set(op for level in precedence for op in level)
+
+def parseTokens(expr):
+    tokens = []
+    token = ""
+    depth = 0
+    for c in expr.strip():
+        if c == " " and depth == 0:
+            if token:
+                tokens.append(token)
+                token = ""
+        else:
+            if c in "([{" :
+                depth += 1
+            elif c in ")]}":
+                depth -= 1
+            token += c
+    if token:
+        tokens.append(token)
+    return tokens
+
+def findOp(tokens, ops):
+    depth = 0
+    for i in reversed(range(len(tokens))):
+        tok = tokens[i]
+        if tok == ")": depth += 1
+        elif tok == "(": depth -= 1
+        elif depth == 0 and tok in ops:
+            return i
+    return -1
+
+def evaluateExpr(tokens):
+    if len(tokens) == 1:
+        return evaluate(tokens[0])
+
+    for ops in precedence:
+        i = findOp(tokens, ops)
+        if i != -1:
+            left = evaluateExpr(tokens[:i])
+            right = evaluateExpr(tokens[i+1:])
+            op = tokens[i]
+
+            if op == "+": return left + right
+            elif op == "-": return left - right
+            elif op == "*": return left * right
+            elif op == "/": return left / right
+            elif op == "%": return left % right
+            elif op == "^": return left ** right
+
+            elif op == "&": return left & right
+            elif op == "|": return left | right
+            elif op == ":": return left ^ right
+
+            elif op == "==": return left == right
+            elif op == "!=": return left != right
+            elif op == "<": return left < right
+            elif op == ">": return left > right
+            elif op in ["<=", "=<"]: return left <= right
+            elif op in [">=", "=>"]: return left >= right
+            elif op == "&&": return bool(left) and bool(right)
+            elif op == "||": return bool(left) or bool(right)
+            elif op == "::": return bool(left) ^ bool(right)
+
+            elif op == "++": return str(left) + str(right)
+
+            print(f"Unknown operator `{op}` ({filename}, {lineNum})")
+            sys.exit(1)
+
+    print(f"Invalid expression: {' '.join(tokens)} ({filename}, {lineNum})")
+    sys.exit(1)
+
 def evaluate(x):
     x = x.strip()
     if debug:
         print(f"Evaluating value `{x}` ({filename}, {lineNum})")
-
-    # empty
-    if x == "":
-        return
     
-    # operators
+    # parenthesized expressions
+    if x.startswith("(") and x.endswith(")"):
+        return evaluate(x[1:-1])
+
+    # split tokens with space logic
     tokens = tokenize(x, " ")
-    if len(tokens) >= 3 and len(tokens) % 2 == 1:
-        total = evaluate(tokens[0])
-        i = 1
-        while i < len(tokens):
-            op = tokens[i]
-            val = evaluate(tokens[i + 1])
-            
-            # arithmetic
-            if op == "+":
-                total += val
-            elif op == "-":
-                total -= val
-            elif op == "*":
-                total *= val
-            elif op == "/":
-                total /= val
-            elif op == "^":
-                total **= val
-            elif op == "%":
-                total %= val
+    if any(t in all_ops for t in tokens):
+        return evaluateExpr(tokens)
 
-            # bitwise
-            elif op == "&":
-                total &= val
-            elif op == "|":
-                total |= val
-            elif op == ":":
-                total ^= val
-
-            # boolean
-            elif op == "==":
-                total = total == val
-            elif op == "!=":
-                total = total != val
-            elif op == ">":
-                total = total > val
-            elif op == "<":
-                total = total < val
-            elif op in [">=", "=>"]:
-                total = total >= val
-            elif op in ["<=", "=<"]:
-                total = total <= val
-            elif op == "&&":
-                total = total and val
-            elif op == "||":
-                total = total or val
-            elif op == "::":
-                total = bool(total) ^ bool(val)
-
-            # concatenate
-            elif op == "..":
-                total = str(total) + str(val)
-            
-            # unknown
-            else:
-                print(f"Unknown operator `{op}` ({filename}, {lineNum})")
-                sys.exit(1)
-
-            i += 2
-        return total
-
-    # type
-    if (x.startswith('"') and x.endswith('"')):
+    # primitives
+    if x.startswith('"') and x.endswith('"'):
         return x[1:-1]
-    if (x.startswith("[") and x.endswith("]")):
+    if x.startswith("[") and x.endswith("]"):
         x = x[1:-1].split(",")
-        for i, obj in enumerate(x):
-            x[i] = evaluate(obj.strip())
-        return x
+        return [evaluate(i.strip()) for i in x]
     if x.startswith("0b"):
-        return bin(x)
+        return int(x, 2)
     if x.startswith("0x"):
-        return hex(x)
+        return int(x, 16)
     if x == "true":
         return True
     if x == "false":
@@ -228,54 +267,35 @@ def evaluate(x):
     try:
         return int(x)
     except ValueError:
-        pass
-    try:
-        return float(x)
-    except ValueError:
-        pass
-
-    # array index
-    if x.endswith("]"):
         try:
-            i = str(x).split("[")
-            return evaluate(i[0])[evaluate(i[1][:-1])]
-        except IndexError:
-            print(f"Index out of range of list ({filename}, {lineNum})")
-            sys.exit(1)
-    
-    # function calls
+            return float(x)
+        except ValueError:
+            pass
+
+    # array indexing
+    if x.endswith("]") and "[" in x:
+        name, idx = x[:-1].split("[", 1)
+        return evaluate(name)[evaluate(idx)]
+
+    # function
     if x.startswith("."):
-        fc = x.split("(", 1)
-        if debug:
-            print(f"Running function `{fc[0][1:]}` ({filename}, {lineNum})")
-
-        # parse arguments
-        if len(fc) == 2:
-            arg = fc[1][:-1]
-            args = [evaluate(a.strip()) for a in tokenize(arg, ",") if a.strip()]
+        name, _, args = x[1:].partition("(")
+        args = args[:-1] if args.endswith(")") else args
+        arg_list = [evaluate(arg.strip()) for arg in tokenize(args, ",") if arg.strip()]
+        if name in ifunctions:
+            return ifunctions[name](*arg_list)
+        elif name in functions:
+            pass  # implement later
         else:
-            args = []
-
-        # run function
-        fc = fc[0][1:]
-        if fc in ifunctions:
-            try:
-                return ifunctions[fc](*args)
-            except TypeError:
-                print(f"Function `{fc}` missing one or more arguments ({filename}, {lineNum})")
-                sys.exit(1)
-        elif fc in functions:
-            pass # implement this later
-        else:
-            print(f"Function `{fc[0][1:]}` not found ({filename}, {lineNum})")
+            print(f"Function `{name}` not found ({filename}, {lineNum})")
             sys.exit(1)
 
     # variable
     if x in variables:
         return variables[x]
-    else:
-        print(f"Unable to evaluate value `{x}` ({filename}, {lineNum})")
-        sys.exit(1)
+    
+    print(f"Unable to evaluate value `{x}` ({filename}, {lineNum})")
+    sys.exit(1)
 
 # parse as type func
 def typeParse(x, typ):
