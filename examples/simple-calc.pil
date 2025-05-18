@@ -7,10 +7,10 @@ inp y flt "Enter your second number (y): "
 ~~ calculate and output answers
 out ""
 out "Answers (add, sub, mult, div, exp, sqrt x, sqrt y):" 
-out x + y
-out x - y 
-out x * y
-out x / y  
-out x ^ y
-out .msqrt(x)
-out .msqrt(y)
+out "x + y = " .. x + y
+out "x - y = " .. x - y 
+out "x * y = " .. x * y
+out "x / y = " .. x / y  
+out "x ^ y = " .. x ^ y
+out "sqrt of x = " .. .sqrt(x)
+out "sqrt of y = " .. .sqrt(y)
