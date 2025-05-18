@@ -1,7 +1,7 @@
 ~~ random number guesser
 
 ~~ number to guess
-set number = .rint(1, 100)
+set number = .rand(1, 100)
 
 ~~ guessing loop
 inp guess int "Enter your guess (1-100): "
