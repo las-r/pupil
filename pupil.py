@@ -6,7 +6,7 @@ import sys
 import time
 
 # pupil, made by las-r on github
-# version 0.7.0
+# version 0.7.1
 
 # environment
 debug = False
@@ -602,7 +602,7 @@ elif len(sys.argv) == 3:
         debug = True
         print("DEBUG MODE")
 else:
-    print("Pupil v0.5.1\nUsage: python pupil.py file.pil [--debug]")
+    print("Pupil v0.7.1\nUsage: python pupil.py file.pil [--debug]")
     sys.exit(1)
 
 # run file
