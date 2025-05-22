@@ -12,7 +12,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
-    "myst_parser"
 ]
 
 autosummary_generate = True
